@@ -185,22 +185,9 @@
 <!-- SETUP SCREEN -->
 <div id="setupOverlay">
   <div class="setup-card">
-    <h2>الاتصال بـ <span>Supabase</span></h2>
+    <h2>ادخل <span>الكلمة المرور</span></h2>
     <p class="setup-sub">سيتم حفظ سجل النشاطات في السحابة حتى تتشارك جميع أجهزة المكتب نفس البيانات. الإعداد يستغرق حوالي 3 دقائق وهو مجاني تمامًا.</p>
 
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-text">اذهب إلى <strong>supabase.com</strong> ← اضغط <strong>Start your project</strong> ← سجّل حسابًا مجانيًا (لا يلزم بطاقة ائتمان).</div>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-text">أنشئ مشروعًا جديدًا، أعطه أي اسم مثل <strong>office-log</strong>، وضع كلمة مرور للقاعدة. انتظر دقيقة حتى يكتمل الإعداد.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-text">
-        في لوحة التحكم اضغط <strong>SQL Editor</strong> من القائمة الجانبية، الصق الكود أدناه واضغط <strong>Run</strong>:
-        <div class="sql-block">create table activities (<br>
 &nbsp;&nbsp;id bigint generated always as identity primary key,<br>
 &nbsp;&nbsp;title text not null,<br>
 &nbsp;&nbsp;category text,<br>
@@ -208,22 +195,16 @@
 &nbsp;&nbsp;end_time timestamptz,<br>
 &nbsp;&nbsp;notes text,<br>
 &nbsp;&nbsp;logged_at timestamptz default now()<br>
-);</div>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <div class="step-text">اذهب إلى <strong>Project Settings → API</strong>، انسخ <strong>Project URL</strong> و<strong>anon public key</strong> والصقهما أدناه.</div>
-    </div>
+);
 
     <hr class="setup-divider">
 
     <div class="setup-field">
-      <label>رابط مشروع Supabase</label>
+      <label>Password 1</label>
       <input type="text" id="cfgUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" />
     </div>
     <div class="setup-field">
-      <label>مفتاح Anon العام</label>
+      <label></label>Password 2</label>
       <input type="text" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIs..." />
     </div>
     <button class="btn-connect" onclick="connectSupabase()">اتصال وفتح التطبيق ←</button>
