@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Office Activity Log</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>سجل نشاطات المكتب</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #0f0f13; --surface: #17171f; --border: #2a2a38;
     --accent: #e8c547; --accent2: #5b8dee; --text: #e8e8f0;
     --muted: #6b6b80; --danger: #e85d5d; --success: #5de8a0;
-    --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+    --font-head: 'Cairo', sans-serif; --font-mono: 'DM Mono', monospace;
   }
   body { background: var(--bg); color: var(--text); font-family: var(--font-head); min-height: 100vh; }
 
@@ -185,21 +185,21 @@
 <!-- SETUP SCREEN -->
 <div id="setupOverlay">
   <div class="setup-card">
-    <h2>Connect to <span>Supabase</span></h2>
-    <p class="setup-sub">Your activity log will sync to the cloud so every device in the office sees the same data. Setup takes about 3 minutes and is completely free.</p>
+    <h2>الاتصال بـ <span>Supabase</span></h2>
+    <p class="setup-sub">سيتم حفظ سجل النشاطات في السحابة حتى تتشارك جميع أجهزة المكتب نفس البيانات. الإعداد يستغرق حوالي 3 دقائق وهو مجاني تمامًا.</p>
 
     <div class="step">
       <div class="step-num">1</div>
-      <div class="step-text">Go to <strong>supabase.com</strong> → click <strong>Start your project</strong> → sign up for free (no credit card needed).</div>
+      <div class="step-text">اذهب إلى <strong>supabase.com</strong> ← اضغط <strong>Start your project</strong> ← سجّل حسابًا مجانيًا (لا يلزم بطاقة ائتمان).</div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">Create a new project. Give it any name (e.g. <strong>office-log</strong>) and set a database password. Wait ~1 minute for it to provision.</div>
+      <div class="step-text">أنشئ مشروعًا جديدًا، أعطه أي اسم مثل <strong>office-log</strong>، وضع كلمة مرور للقاعدة. انتظر دقيقة حتى يكتمل الإعداد.</div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
       <div class="step-text">
-        In your project dashboard, click <strong>SQL Editor</strong> in the left sidebar, paste the query below, and click <strong>Run</strong>:
+        في لوحة التحكم اضغط <strong>SQL Editor</strong> من القائمة الجانبية، الصق الكود أدناه واضغط <strong>Run</strong>:
         <div class="sql-block">create table activities (<br>
 &nbsp;&nbsp;id bigint generated always as identity primary key,<br>
 &nbsp;&nbsp;title text not null,<br>
@@ -213,20 +213,20 @@
     </div>
     <div class="step">
       <div class="step-num">4</div>
-      <div class="step-text">Go to <strong>Project Settings → API</strong>. Copy your <strong>Project URL</strong> and <strong>anon public</strong> key and paste them below.</div>
+      <div class="step-text">اذهب إلى <strong>Project Settings → API</strong>، انسخ <strong>Project URL</strong> و<strong>anon public key</strong> والصقهما أدناه.</div>
     </div>
 
     <hr class="setup-divider">
 
     <div class="setup-field">
-      <label>Supabase Project URL</label>
+      <label>رابط مشروع Supabase</label>
       <input type="text" id="cfgUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" />
     </div>
     <div class="setup-field">
-      <label>Supabase Anon Key</label>
+      <label>مفتاح Anon العام</label>
       <input type="text" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIs..." />
     </div>
-    <button class="btn-connect" onclick="connectSupabase()">Connect &amp; Open App →</button>
+    <button class="btn-connect" onclick="connectSupabase()">اتصال وفتح التطبيق ←</button>
     <div class="setup-error" id="setupError"></div>
   </div>
 </div>
@@ -236,7 +236,7 @@
   <div class="header">
     <div class="header-left">
       <div class="logo-dot"></div>
-      <h1>Office <span>Activity</span> Log</h1>
+      <h1>سجل <span>نشاطات</span> المكتب</h1>
     </div>
     <div class="header-right">
       <div class="sync-badge" id="syncBadge"><div class="sync-dot"></div><span id="syncText">Live</span></div>
@@ -247,57 +247,57 @@
 
   <div class="container">
     <div class="stats-bar">
-      <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Entries</div></div>
-      <div class="stat-card"><div class="stat-num" id="statToday">—</div><div class="stat-label">Today</div></div>
-      <div class="stat-card"><div class="stat-num" id="statMeetings">—</div><div class="stat-label">Meetings</div></div>
-      <div class="stat-card"><div class="stat-num" id="statHours">—</div><div class="stat-label">Hours Logged</div></div>
+      <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">إجمالي السجلات</div></div>
+      <div class="stat-card"><div class="stat-num" id="statToday">—</div><div class="stat-label">اليوم</div></div>
+      <div class="stat-card"><div class="stat-num" id="statMeetings">—</div><div class="stat-label">الاجتماعات</div></div>
+      <div class="stat-card"><div class="stat-num" id="statHours">—</div><div class="stat-label">ساعات مسجّلة</div></div>
     </div>
 
     <div class="form-card">
-      <h2>📋 Log New Activity</h2>
+      <h2>📋 تسجيل نشاط جديد</h2>
       <div class="form-row">
         <div class="form-group">
-          <label>Activity Title</label>
-          <input type="text" id="actTitle" placeholder="e.g. Team standup meeting" />
+          <label>عنوان النشاط</label>
+          <input type="text" id="actTitle" placeholder="مثال: اجتماع الفريق الصباحي" />
         </div>
         <div class="form-group">
-          <label>Category</label>
+          <label>التصنيف</label>
           <div class="category-pills" id="categoryPills">
-            <button class="pill active" data-cat="Meeting">Meeting</button>
-            <button class="pill" data-cat="Task">Task</button>
-            <button class="pill" data-cat="Visitor">Visitor</button>
-            <button class="pill" data-cat="Incident">Incident</button>
-            <button class="pill" data-cat="General">General</button>
+            <button class="pill active" data-cat="Meeting">اجتماع</button>
+            <button class="pill" data-cat="Task">مهمة</button>
+            <button class="pill" data-cat="Visitor">زيارة</button>
+            <button class="pill" data-cat="Incident">حادثة</button>
+            <button class="pill" data-cat="General">عام</button>
           </div>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Start Time</label>
+          <label>وقت البداية</label>
           <input type="datetime-local" id="startTime" />
         </div>
         <div class="form-group">
-          <label>End Time</label>
+          <label>وقت النهاية</label>
           <input type="datetime-local" id="endTime" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group full">
-          <label>Notes / Description (optional)</label>
-          <textarea id="actNotes" placeholder="Add any relevant details..."></textarea>
+          <label>ملاحظات (اختياري)</label>
+          <textarea id="actNotes" placeholder="أضف أي تفاصيل ذات صلة..."></textarea>
         </div>
       </div>
-      <button class="btn-submit" id="submitBtn" onclick="addEntry()">＋ Log Activity</button>
+      <button class="btn-submit" id="submitBtn" onclick="addEntry()">＋ تسجيل النشاط</button>
     </div>
 
     <div class="filter-bar">
-      <h2>📁 Activity History</h2>
+      <h2>📁 سجل النشاطات</h2>
       <input type="date" id="filterDate" onchange="renderEntries()" />
-      <button class="btn-sm" onclick="clearFilter()">Show All</button>
-      <button class="btn-export" onclick="exportCSV()">↓ Export CSV</button>
+      <button class="btn-sm" onclick="clearFilter()">عرض الكل</button>
+      <button class="btn-export" onclick="exportCSV()">↓ تصدير CSV</button>
     </div>
 
-    <div id="timeline"><div class="loading-row">Loading entries…</div></div>
+    <div id="timeline"><div class="loading-row">جارٍ التحميل…</div></div>
   </div>
 </div>
 
@@ -312,18 +312,18 @@
   }
   setInterval(updateClock, 1000); updateClock();
 
-  // Setup
+  // Setup validation messages
   function connectSupabase() {
     const url = document.getElementById('cfgUrl').value.trim().replace(/\/$/,'');
     const key = document.getElementById('cfgKey').value.trim();
     const err = document.getElementById('setupError');
     err.style.display = 'none';
     if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
-      err.textContent = 'Enter a valid Supabase Project URL (https://xxxx.supabase.co)';
+      err.textContent = 'أدخل رابط مشروع Supabase صحيحًا (https://xxxx.supabase.co)';
       err.style.display = 'block'; return;
     }
     if (key.length < 20) {
-      err.textContent = 'Enter your Supabase anon public key.';
+      err.textContent = 'أدخل مفتاح anon الخاص بمشروعك.';
       err.style.display = 'block'; return;
     }
     SUPABASE_URL = url; SUPABASE_KEY = key;
@@ -332,7 +332,7 @@
   }
 
   function resetConfig() {
-    if (!confirm('Reset Supabase connection? You will need to re-enter your credentials.')) return;
+    if (!confirm('إعادة ضبط إعدادات الاتصال؟ ستحتاج إلى إدخال بيانات Supabase مجددًا.')) return;
     localStorage.removeItem(CFG_KEY); location.reload();
   }
 
@@ -355,7 +355,7 @@
     const b = document.getElementById('syncBadge');
     const t = document.getElementById('syncText');
     b.className = 'sync-badge' + (s==='syncing' ? ' syncing' : s==='error' ? ' error' : '');
-    t.textContent = s==='syncing' ? 'Syncing…' : s==='error' ? 'Error' : 'Live';
+    t.textContent = s==='syncing' ? 'جارٍ المزامنة…' : s==='error' ? 'خطأ' : 'مباشر';
   }
 
   async function loadEntries() {
@@ -369,7 +369,7 @@
     } catch(e) {
       setSyncState('error');
       document.getElementById('timeline').innerHTML =
-        `<div class="empty-state"><div class="icon">⚠️</div><p>Could not load data.<br>Check your Supabase credentials or internet connection.<br><small style="color:var(--danger);font-family:var(--font-mono)">${e.message}</small></p></div>`;
+        `<div class="empty-state"><div class="icon">⚠️</div><p>تعذّر تحميل البيانات.<br>تحقق من بيانات Supabase أو اتصالك بالإنترنت.<br><small style="color:var(--danger);font-family:var(--font-mono)">${e.message}</small></p></div>`;
     }
   }
 
@@ -378,20 +378,35 @@
     const start = document.getElementById('startTime').value;
     const end   = document.getElementById('endTime').value;
     const notes = document.getElementById('actNotes').value.trim();
-    if (!title) { alert('Please enter an activity title.'); return; }
-    if (!start) { alert('Please set a start time.'); return; }
+    if (!title) { alert('الرجاء إدخال عنوان النشاط.'); return; }
+    if (!start) { alert('الرجاء تحديد وقت البداية.'); return; }
 
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.textContent = 'Saving…';
+    btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
     setSyncState('syncing');
+
+    // Send as local time string with offset so Supabase stores the correct moment
+    function toISOWithOffset(localStr) {
+      const d = new Date(localStr);
+      const off = -d.getTimezoneOffset();
+      const sign = off >= 0 ? '+' : '-';
+      const hh = String(Math.floor(Math.abs(off)/60)).padStart(2,'0');
+      const mm = String(Math.abs(off)%60).padStart(2,'0');
+      return d.getFullYear()+'-'+
+        String(d.getMonth()+1).padStart(2,'0')+'-'+
+        String(d.getDate()).padStart(2,'0')+'T'+
+        String(d.getHours()).padStart(2,'0')+':'+
+        String(d.getMinutes()).padStart(2,'0')+':00'+
+        sign+hh+':'+mm;
+    }
 
     try {
       const res = await sb('activities', {
         method: 'POST', prefer: 'return=representation',
         body: JSON.stringify({
           title, category: selectedCategory,
-          start_time: new Date(start).toISOString(),
-          end_time: end ? new Date(end).toISOString() : null,
+          start_time: toISOWithOffset(start),
+          end_time: end ? toISOWithOffset(end) : null,
           notes: notes || null
         })
       });
@@ -402,14 +417,14 @@
       await loadEntries();
     } catch(e) {
       setSyncState('error');
-      alert('Failed to save entry: ' + e.message);
+      alert('فشل الحفظ: ' + e.message);
     } finally {
-      btn.disabled = false; btn.textContent = '＋ Log Activity';
+      btn.disabled = false; btn.textContent = '＋ تسجيل النشاط';
     }
   }
 
   async function deleteEntry(id) {
-    if (!confirm('Delete this entry?')) return;
+    if (!confirm('حذف هذا السجل؟')) return;
     setSyncState('syncing');
     try {
       const res = await sb(`activities?id=eq.${id}`, { method: 'DELETE' });
@@ -417,7 +432,7 @@
       await loadEntries();
     } catch(e) {
       setSyncState('error');
-      alert('Delete failed: ' + e.message);
+      alert('فشل الحذف: ' + e.message);
     }
   }
 
@@ -426,7 +441,7 @@
     const filtered = fd ? entries.filter(e => (e.start_time||'').slice(0,10) === fd) : entries;
     const tl = document.getElementById('timeline');
     if (!filtered.length) {
-      tl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${fd ? 'No activities on this date.' : 'No activities logged yet.<br>Add your first one above!'}</p></div>`;
+      tl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${fd ? 'لا توجد نشاطات في هذا التاريخ.' : 'لم يتم تسجيل أي نشاط بعد.<br>أضف أول نشاط من الأعلى!'}</p></div>`;
       return;
     }
     const groups = {};
@@ -444,7 +459,7 @@
               <div class="entry-title">${esc(e.title)}</div>
               ${e.notes ? `<div class="entry-desc">${esc(e.notes)}</div>` : ''}
               <div class="entry-meta">
-                <span class="entry-category cat-${(e.category||'general').toLowerCase()}">${e.category||'General'}</span>
+                <span class="entry-category cat-${(e.category||'general').toLowerCase()}">${catLabel(e.category)}</span>
                 ${getDur(e.start_time,e.end_time) ? `<span class="entry-duration">${getDur(e.start_time,e.end_time)}</span>` : ''}
                 <span class="entry-logged">${fmtLogged(e.logged_at)}</span>
               </div>
@@ -455,13 +470,14 @@
   }
 
   function updateStats() {
-    const today = new Date().toISOString().slice(0,10);
+    const now = new Date();
+    const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
     document.getElementById('statTotal').textContent = entries.length;
     document.getElementById('statToday').textContent = entries.filter(e=>(e.start_time||'').slice(0,10)===today).length;
     document.getElementById('statMeetings').textContent = entries.filter(e=>e.category==='Meeting').length;
     let ms = 0;
     entries.forEach(e=>{ if(e.start_time&&e.end_time){ const d=new Date(e.end_time)-new Date(e.start_time); if(d>0) ms+=d; } });
-    document.getElementById('statHours').textContent = (ms/3600000).toFixed(1)+'h';
+    document.getElementById('statHours').textContent = (ms/3600000).toFixed(1)+' س';
   }
 
   function setDefaultTimes() {
@@ -471,20 +487,31 @@
     document.getElementById('endTime').value = local;
   }
 
-  function fmtTime(iso) { if(!iso) return '—'; return new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
-  function fmtDate(dk) { return new Date(dk+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
-  function fmtLogged(iso) { if(!iso) return ''; return 'logged '+new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+fmtTime(iso); }
+  // Display the time stored in DB (which now has correct offset) in local time
+  function fmtTime(iso) {
+    if(!iso) return '—';
+    return new Date(iso).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',hour12:false});
+  }
+  function fmtDate(dk) {
+    return new Date(dk+'T12:00:00').toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+  function fmtLogged(iso) {
+    if(!iso) return '';
+    return 'سُجّل '+new Date(iso).toLocaleDateString('ar-SA',{day:'numeric',month:'short'})+' '+fmtTime(iso);
+  }
   function getDur(s,e) {
     if(!s||!e) return null;
     const ms = new Date(e)-new Date(s); if(ms<=0) return null;
     const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000);
-    return h>0 ? `${h}h ${m}m` : `${m}m`;
+    return h>0 ? `${h}س ${m}د` : `${m}د`;
   }
   function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  const CAT_AR = {Meeting:'اجتماع', Task:'مهمة', Visitor:'زيارة', Incident:'حادثة', General:'عام'};
+  function catLabel(c) { return CAT_AR[c] || c || 'عام'; }
   function clearFilter() { document.getElementById('filterDate').value=''; renderEntries(); }
 
   function exportCSV() {
-    if(!entries.length){ alert('No entries to export.'); return; }
+    if(!entries.length){ alert('لا توجد سجلات للتصدير.'); return; }
     const hdr = ['Title','Category','Date','Start Time','End Time','Duration','Notes'];
     const rows = entries.map(e=>[e.title,e.category,(e.start_time||'').slice(0,10),fmtTime(e.start_time),fmtTime(e.end_time),getDur(e.start_time,e.end_time)||'',e.notes||'']);
     const csv = [hdr,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
