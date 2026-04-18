@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Activity Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f13; --surface: #17171f; --border: #2a2a38;
+    --accent: #e8c547; --accent2: #5b8dee; --text: #e8e8f0;
+    --muted: #6b6b80; --danger: #e85d5d; --success: #5de8a0;
+    --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-head); min-height: 100vh; }
+
+  /* SETUP OVERLAY */
+  #setupOverlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; padding: 20px;
+  }
+  .setup-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 36px; max-width: 540px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .setup-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .setup-card h2 span { color: var(--accent); }
+  .setup-sub { font-size: 13px; color: var(--muted); margin-bottom: 26px; line-height: 1.6; }
+  .step { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--accent);
+    color: #0f0f13; font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-text { font-size: 13px; color: var(--muted); line-height: 1.65; }
+  .step-text strong { color: var(--text); }
+  .sql-block {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+    padding: 10px 12px; margin-top: 8px; font-family: var(--font-mono);
+    font-size: 11px; color: var(--accent2); line-height: 1.6; word-break: break-all;
+  }
+  .setup-divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+  .setup-field { margin-bottom: 14px; }
+  .setup-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); display: block; margin-bottom: 6px; }
+  .setup-field input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--font-mono);
+    font-size: 13px; padding: 10px 14px; outline: none; transition: border-color 0.2s;
+  }
+  .setup-field input:focus { border-color: var(--accent); }
+  .btn-connect {
+    width: 100%; padding: 13px; background: var(--accent); color: #0f0f13;
+    border: none; border-radius: 9px; font-family: var(--font-head);
+    font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 8px; transition: opacity 0.2s;
+  }
+  .btn-connect:hover { opacity: 0.88; }
+  .setup-error { color: var(--danger); font-size: 12px; margin-top: 10px; text-align: center; display: none; }
+
+  /* HEADER */
+  .header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 18px 28px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .header h1 { font-size: 17px; font-weight: 800; }
+  .header h1 span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .sync-badge {
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+  .sync-badge.syncing .sync-dot { background: var(--accent); animation: pulse 0.8s infinite; }
+  .sync-badge.error .sync-dot { background: var(--danger); }
+  .live-clock { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  .btn-gear {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 7px; padding: 5px 10px; cursor: pointer; font-size: 14px; transition: all 0.15s;
+  }
+  .btn-gear:hover { color: var(--text); border-color: var(--muted); }
+
+  /* MAIN */
+  .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+  .stats-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-num { font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; margin-bottom: 28px; }
+  .form-card h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 18px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1/-1; }
+  label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  input, textarea {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: var(--font-mono); font-size: 14px;
+    padding: 10px 14px; outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 75px; font-family: var(--font-head); font-size: 14px; }
+  .category-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .pill {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border); background: transparent;
+    color: var(--muted); transition: all 0.15s; font-family: var(--font-head);
+  }
+  .pill:hover, .pill.active { border-color: var(--accent); color: var(--accent); background: rgba(232,197,71,.08); }
+  .btn-submit {
+    width: 100%; padding: 13px; background: var(--accent); color: #0f0f13;
+    border: none; border-radius: 9px; font-family: var(--font-head); font-size: 14px;
+    font-weight: 800; cursor: pointer; margin-top: 6px; transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-submit:hover { opacity: .88; }
+  .btn-submit:active { transform: scale(.99); }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+  .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .filter-bar h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); flex: 1; }
+  .filter-bar input[type="date"] { width: auto; padding: 7px 12px; font-size: 13px; }
+  .btn-export {
+    padding: 7px 14px; background: transparent; border: 1.5px solid var(--accent2);
+    color: var(--accent2); border-radius: 7px; font-family: var(--font-head);
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-export:hover { background: rgba(91,141,238,.1); }
+  .btn-sm {
+    padding: 7px 12px; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); border-radius: 7px; font-family: var(--font-head);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--muted); }
+
+  .date-group { margin-bottom: 26px; }
+  .date-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); padding: 6px 0; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .activity-entry {
+    display: flex; gap: 14px; padding: 15px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 9px; transition: border-color 0.2s;
+    animation: slideIn 0.22s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+  .activity-entry:hover { border-color: #3a3a50; }
+  .entry-time { font-family: var(--font-mono); font-size: 12px; color: var(--accent); white-space: nowrap; padding-top: 2px; min-width: 105px; }
+  .entry-body { flex: 1; }
+  .entry-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .entry-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .entry-meta { display: flex; align-items: center; gap: 8px; margin-top: 7px; flex-wrap: wrap; }
+  .entry-category { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .cat-meeting { background: rgba(91,141,238,.15); color: #5b8dee; }
+  .cat-task { background: rgba(93,232,160,.12); color: #5de8a0; }
+  .cat-visitor { background: rgba(232,197,71,.12); color: #e8c547; }
+  .cat-incident { background: rgba(232,93,93,.12); color: #e85d5d; }
+  .cat-general { background: rgba(255,255,255,.07); color: #8888aa; }
+  .entry-duration { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .entry-logged { font-family: var(--font-mono); font-size: 10px; color: #44445a; margin-left: auto; }
+  .entry-delete { background: none; border: none; color: var(--border); cursor: pointer; font-size: 16px; padding: 0 4px; transition: color 0.15s; align-self: flex-start; }
+  .entry-delete:hover { color: var(--danger); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.7; }
+  .loading-row { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2,1fr); }
+    .header { padding: 14px 16px; }
+    .container { padding: 18px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setupOverlay">
+  <div class="setup-card">
+    <h2>Connect to <span>Supabase</span></h2>
+    <p class="setup-sub">Your activity log will sync to the cloud so every device in the office sees the same data. Setup takes about 3 minutes and is completely free.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Go to <strong>supabase.com</strong> → click <strong>Start your project</strong> → sign up for free (no credit card needed).</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Create a new project. Give it any name (e.g. <strong>office-log</strong>) and set a database password. Wait ~1 minute for it to provision.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        In your project dashboard, click <strong>SQL Editor</strong> in the left sidebar, paste the query below, and click <strong>Run</strong>:
+        <div class="sql-block">create table activities (<br>
+&nbsp;&nbsp;id bigint generated always as identity primary key,<br>
+&nbsp;&nbsp;title text not null,<br>
+&nbsp;&nbsp;category text,<br>
+&nbsp;&nbsp;start_time timestamptz,<br>
+&nbsp;&nbsp;end_time timestamptz,<br>
+&nbsp;&nbsp;notes text,<br>
+&nbsp;&nbsp;logged_at timestamptz default now()<br>
+);</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Go to <strong>Project Settings → API</strong>. Copy your <strong>Project URL</strong> and <strong>anon public</strong> key and paste them below.</div>
+    </div>
+
+    <hr class="setup-divider">
+
+    <div class="setup-field">
+      <label>Supabase Project URL</label>
+      <input type="text" id="cfgUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" />
+    </div>
+    <div class="setup-field">
+      <label>Supabase Anon Key</label>
+      <input type="text" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIs..." />
+    </div>
+    <button class="btn-connect" onclick="connectSupabase()">Connect &amp; Open App →</button>
+    <div class="setup-error" id="setupError"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-dot"></div>
+      <h1>Office <span>Activity</span> Log</h1>
+    </div>
+    <div class="header-right">
+      <div class="sync-badge" id="syncBadge"><div class="sync-dot"></div><span id="syncText">Live</span></div>
+      <div class="live-clock" id="clock">--:--:--</div>
+      <button class="btn-gear" onclick="resetConfig()" title="Change connection">⚙</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Entries</div></div>
+      <div class="stat-card"><div class="stat-num" id="statToday">—</div><div class="stat-label">Today</div></div>
+      <div class="stat-card"><div class="stat-num" id="statMeetings">—</div><div class="stat-label">Meetings</div></div>
+      <div class="stat-card"><div class="stat-num" id="statHours">—</div><div class="stat-label">Hours Logged</div></div>
+    </div>
+
+    <div class="form-card">
+      <h2>📋 Log New Activity</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Activity Title</label>
+          <input type="text" id="actTitle" placeholder="e.g. Team standup meeting" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <div class="category-pills" id="categoryPills">
+            <button class="pill active" data-cat="Meeting">Meeting</button>
+            <button class="pill" data-cat="Task">Task</button>
+            <button class="pill" data-cat="Visitor">Visitor</button>
+            <button class="pill" data-cat="Incident">Incident</button>
+            <button class="pill" data-cat="General">General</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Time</label>
+          <input type="datetime-local" id="startTime" />
+        </div>
+        <div class="form-group">
+          <label>End Time</label>
+          <input type="datetime-local" id="endTime" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Notes / Description (optional)</label>
+          <textarea id="actNotes" placeholder="Add any relevant details..."></textarea>
+        </div>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="addEntry()">＋ Log Activity</button>
+    </div>
+
+    <div class="filter-bar">
+      <h2>📁 Activity History</h2>
+      <input type="date" id="filterDate" onchange="renderEntries()" />
+      <button class="btn-sm" onclick="clearFilter()">Show All</button>
+      <button class="btn-export" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+
+    <div id="timeline"><div class="loading-row">Loading entries…</div></div>
+  </div>
+</div>
+
+<script>
+  const CFG_KEY = 'office_log_supabase_v1';
+  let SUPABASE_URL = '', SUPABASE_KEY = '';
+  let entries = [], selectedCategory = 'Meeting';
+
+  // Clock
+  function updateClock() {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  }
+  setInterval(updateClock, 1000); updateClock();
+
+  // Setup
+  function connectSupabase() {
+    const url = document.getElementById('cfgUrl').value.trim().replace(/\/$/,'');
+    const key = document.getElementById('cfgKey').value.trim();
+    const err = document.getElementById('setupError');
+    err.style.display = 'none';
+    if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
+      err.textContent = 'Enter a valid Supabase Project URL (https://xxxx.supabase.co)';
+      err.style.display = 'block'; return;
+    }
+    if (key.length < 20) {
+      err.textContent = 'Enter your Supabase anon public key.';
+      err.style.display = 'block'; return;
+    }
+    SUPABASE_URL = url; SUPABASE_KEY = key;
+    localStorage.setItem(CFG_KEY, JSON.stringify({url, key}));
+    launchApp();
+  }
+
+  function resetConfig() {
+    if (!confirm('Reset Supabase connection? You will need to re-enter your credentials.')) return;
+    localStorage.removeItem(CFG_KEY); location.reload();
+  }
+
+  // Supabase REST helper
+  async function sb(path, opts = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      ...opts,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || '',
+        ...(opts.headers || {})
+      }
+    });
+    return res;
+  }
+
+  function setSyncState(s) {
+    const b = document.getElementById('syncBadge');
+    const t = document.getElementById('syncText');
+    b.className = 'sync-badge' + (s==='syncing' ? ' syncing' : s==='error' ? ' error' : '');
+    t.textContent = s==='syncing' ? 'Syncing…' : s==='error' ? 'Error' : 'Live';
+  }
+
+  async function loadEntries() {
+    setSyncState('syncing');
+    try {
+      const res = await sb('activities?select=*&order=start_time.desc');
+      if (!res.ok) throw new Error(await res.text());
+      entries = await res.json();
+      setSyncState('live');
+      renderEntries(); updateStats();
+    } catch(e) {
+      setSyncState('error');
+      document.getElementById('timeline').innerHTML =
+        `<div class="empty-state"><div class="icon">⚠️</div><p>Could not load data.<br>Check your Supabase credentials or internet connection.<br><small style="color:var(--danger);font-family:var(--font-mono)">${e.message}</small></p></div>`;
+    }
+  }
+
+  async function addEntry() {
+    const title = document.getElementById('actTitle').value.trim();
+    const start = document.getElementById('startTime').value;
+    const end   = document.getElementById('endTime').value;
+    const notes = document.getElementById('actNotes').value.trim();
+    if (!title) { alert('Please enter an activity title.'); return; }
+    if (!start) { alert('Please set a start time.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    setSyncState('syncing');
+
+    try {
+      const res = await sb('activities', {
+        method: 'POST', prefer: 'return=representation',
+        body: JSON.stringify({
+          title, category: selectedCategory,
+          start_time: new Date(start).toISOString(),
+          end_time: end ? new Date(end).toISOString() : null,
+          notes: notes || null
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      document.getElementById('actTitle').value = '';
+      document.getElementById('actNotes').value = '';
+      setDefaultTimes();
+      await loadEntries();
+    } catch(e) {
+      setSyncState('error');
+      alert('Failed to save entry: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '＋ Log Activity';
+    }
+  }
+
+  async function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    setSyncState('syncing');
+    try {
+      const res = await sb(`activities?id=eq.${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      await loadEntries();
+    } catch(e) {
+      setSyncState('error');
+      alert('Delete failed: ' + e.message);
+    }
+  }
+
+  function renderEntries() {
+    const fd = document.getElementById('filterDate').value;
+    const filtered = fd ? entries.filter(e => (e.start_time||'').slice(0,10) === fd) : entries;
+    const tl = document.getElementById('timeline');
+    if (!filtered.length) {
+      tl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${fd ? 'No activities on this date.' : 'No activities logged yet.<br>Add your first one above!'}</p></div>`;
+      return;
+    }
+    const groups = {};
+    filtered.forEach(e => {
+      const dk = (e.start_time||'').slice(0,10);
+      (groups[dk] = groups[dk]||[]).push(e);
+    });
+    tl.innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(dk => `
+      <div class="date-group">
+        <div class="date-label">${fmtDate(dk)}</div>
+        ${groups[dk].map(e => `
+          <div class="activity-entry">
+            <div class="entry-time">${fmtTime(e.start_time)}${e.end_time ? ' → '+fmtTime(e.end_time) : ''}</div>
+            <div class="entry-body">
+              <div class="entry-title">${esc(e.title)}</div>
+              ${e.notes ? `<div class="entry-desc">${esc(e.notes)}</div>` : ''}
+              <div class="entry-meta">
+                <span class="entry-category cat-${(e.category||'general').toLowerCase()}">${e.category||'General'}</span>
+                ${getDur(e.start_time,e.end_time) ? `<span class="entry-duration">${getDur(e.start_time,e.end_time)}</span>` : ''}
+                <span class="entry-logged">${fmtLogged(e.logged_at)}</span>
+              </div>
+            </div>
+            <button class="entry-delete" onclick="deleteEntry(${e.id})" title="Delete">✕</button>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  function updateStats() {
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('statTotal').textContent = entries.length;
+    document.getElementById('statToday').textContent = entries.filter(e=>(e.start_time||'').slice(0,10)===today).length;
+    document.getElementById('statMeetings').textContent = entries.filter(e=>e.category==='Meeting').length;
+    let ms = 0;
+    entries.forEach(e=>{ if(e.start_time&&e.end_time){ const d=new Date(e.end_time)-new Date(e.start_time); if(d>0) ms+=d; } });
+    document.getElementById('statHours').textContent = (ms/3600000).toFixed(1)+'h';
+  }
+
+  function setDefaultTimes() {
+    const now = new Date();
+    const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('startTime').value = local;
+    document.getElementById('endTime').value = local;
+  }
+
+  function fmtTime(iso) { if(!iso) return '—'; return new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+  function fmtDate(dk) { return new Date(dk+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+  function fmtLogged(iso) { if(!iso) return ''; return 'logged '+new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+fmtTime(iso); }
+  function getDur(s,e) {
+    if(!s||!e) return null;
+    const ms = new Date(e)-new Date(s); if(ms<=0) return null;
+    const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000);
+    return h>0 ? `${h}h ${m}m` : `${m}m`;
+  }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function clearFilter() { document.getElementById('filterDate').value=''; renderEntries(); }
+
+  function exportCSV() {
+    if(!entries.length){ alert('No entries to export.'); return; }
+    const hdr = ['Title','Category','Date','Start Time','End Time','Duration','Notes'];
+    const rows = entries.map(e=>[e.title,e.category,(e.start_time||'').slice(0,10),fmtTime(e.start_time),fmtTime(e.end_time),getDur(e.start_time,e.end_time)||'',e.notes||'']);
+    const csv = [hdr,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = `office-log-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  document.getElementById('categoryPills').addEventListener('click', e => {
+    if(e.target.classList.contains('pill')) {
+      document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+      e.target.classList.add('active');
+      selectedCategory = e.target.dataset.cat;
+    }
+  });
+
+  function launchApp() {
+    document.getElementById('setupOverlay').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    setDefaultTimes();
+    loadEntries();
+    setInterval(loadEntries, 30000); // auto-refresh every 30s
+  }
+
+  // Init
+  (function(){
+    const saved = localStorage.getItem(CFG_KEY);
+    if(saved){ try{ const {url,key}=JSON.parse(saved); SUPABASE_URL=url; SUPABASE_KEY=key; launchApp(); return; }catch(e){} }
+    document.getElementById('setupOverlay').style.display = 'flex';
+  })();
+</script>
+</body>
+</html>
